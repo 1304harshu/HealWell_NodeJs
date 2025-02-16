@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../../../../../Downloads/healWell_backend/HealWell_NodeJs/models/User');
+const User = require('../models/User');
 const authenticateJWT = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
   
