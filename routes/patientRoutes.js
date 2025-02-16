@@ -2,16 +2,59 @@ const express = require('express');
 const Prescription = require('../models/Prescription');
 const Appointment = require('../models/Appointment');
 const authenticateJWT = require('../middleware/authMiddleware');
+const User = require('../models/User');
+const Medicine = require('../models/Medicines'); // Import Medicine model
+const Doctor = require('../models/Doctor'); // Import the schema
 
 const router = express.Router();
 
 // View prescriptions for the logged-in patient
 router.get('/prescriptions', authenticateJWT, async (req, res) => {
-  if (req.user.role !== 'patient') return res.status(403).send({ message: 'Patient access required' });
+  try {
+    // Check if the user is a patient
+    if (req.user.role !== 'patient') {
+      return res.status(403).send({ message: 'Patient access required' });
+    }
 
-  const prescriptions = await Prescription.find({ patient: req.user._id }).populate('doctor');
-  res.send(prescriptions);
+    // Fetch prescriptions for the logged-in patient
+    const prescriptions = await Prescription.find({ patientEmail: req.user.email });
+
+    // Send response
+    res.send({ data: prescriptions });
+  } catch (error) {
+    console.error('Error fetching prescriptions:', error);
+    res.status(500).send({ message: 'Internal Server Error' });
+  }
 });
+
+
+router.get('/prescriptions/:prescriptionNo', authenticateJWT, async (req, res) => {
+  try {
+    // Check if the user is a patient
+    if (req.user.role !== 'patient') {
+      return res.status(403).send({ message: 'Patient access required' });
+    }
+
+    // Extract prescription number from request parameters
+    const { prescriptionNo } = req.params;
+
+    // Find the prescription by its number and patient email
+    const prescription = await Prescription.findOne({ prescriptionNo, patientEmail: req.user.email });
+
+    // Check if prescription exists
+    if (!prescription) {
+      return res.status(404).send({ message: 'Prescription not found' });
+    }
+
+    // Send response
+    res.send({ data: prescription });
+  } catch (error) {
+    console.error('Error fetching prescription:', error);
+    res.status(500).send({ message: 'Internal Server Error' });
+  }
+});
+
+
 
 // Schedule an appointment
 // router.post('/schedule-appointment', authenticateJWT, async (req, res) => {
@@ -55,38 +98,15 @@ router.post('/schedule-appointment', authenticateJWT, async (req, res) => {
     }
   });
 
-// Get all medications based on diagnosis
-// router.get('/medications-by-diagnosis', authenticateJWT, async (req, res) => {
-//     const { diagnosis } = req.query;  // Diagnosis is passed as a query parameter
-  
-//     if (!diagnosis) {
-//       return res.status(400).send({ message: 'Diagnosis is required' });
-//     }
-  
-//     try {
-//       // Find prescriptions with the given diagnosis
-//       const prescriptions = await Prescription.find({ diagnosis: new RegExp(diagnosis, 'i') });  // Case-insensitive search
-  
-//       // Create an array to store the list of medications
-//       const medications = prescriptions.flatMap(prescription =>
-//         prescription.medications.map(med => ({
-//           name: med.name,
-//           dosage: med.dosage,
-//           quantity: med.quantity,
-//           instructions: med.instructions,
-//           diagnosis: prescription.diagnosis,
-//         }))
-//       );
-  
-//       if (medications.length === 0) {
-//         return res.status(404).send({ message: 'No medications found for the given diagnosis' });
-//       }
-  
-//       res.status(200).send(medications);
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).send({ message: 'Error fetching medications' });
-//     }
-//   });
+  router.get('/doctors', async (req, res) => {
+    try {
+        const doctors = await Doctor.find({});
+        res.status(200).json(doctors);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching doctors' });
+    }
+});
+
 
 module.exports = router;

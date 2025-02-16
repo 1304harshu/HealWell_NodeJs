@@ -4,6 +4,7 @@ const Appointment = require('../models/Appointment');
 const authenticateJWT = require('../middleware/authMiddleware');
 const User = require('../models/User');
 const Medicine = require('../models/Medicines'); // Import Medicine model
+const Doctor = require('../models/Doctor'); // Import the schema
 
 const router = express.Router();
 
@@ -95,4 +96,30 @@ router.post('/add-medicine', async (req, res) => {
       res.status(500).send({ message: "Error adding medicines" });
   }
 });
+
+
+// Add a new doctor
+router.post('/add-doctor', async (req, res) => {
+    const { name, specialty, email, phone, experience, availableDays, availableTime, clinicAddress } = req.body;
+
+    try {
+        const newDoctor = new Doctor({
+            name,
+            specialty,
+            email,
+            phone,
+            experience,
+            availableDays,
+            availableTime,
+            clinicAddress
+        });
+
+        await newDoctor.save();
+        res.status(201).json({ message: "Doctor added successfully", doctor: newDoctor });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error adding doctor" });
+    }
+});
+
 module.exports = router;

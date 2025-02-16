@@ -9,7 +9,7 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
   const { email, password, role } = req.body;
 
-  const user = await User.findOne({ email });
+  const user =  await User.findOne({ email });
   if (!user) return res.status(400).send({ message: 'Invalid credentials' });
 
   const isMatch = await bcrypt.compare(password, user.password);
@@ -18,7 +18,7 @@ router.post('/login', async (req, res) => {
   if(role != user.role) return res.status(400).send({ message: 'Please select correct role' });
 
   const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-  res.send({ token: token, name: user.name, email: user.email, role: user.role });
+  res.send({ token: token, name: user.name, email: user.email, role: user.role, id: user._id });
 });
 
 router.post("/register", async (req, res) => {
