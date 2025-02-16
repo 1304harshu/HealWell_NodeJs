@@ -9,9 +9,10 @@ const medicationSchema = new mongoose.Schema({
 
 const prescriptionSchema = new mongoose.Schema({
   prescriptionNumber: { type: String, required: true, unique: true },  // Unique identifier for each prescription
-  patient: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  // patient: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  patientName: { type: String},
   patientEmail: { type: String, required: true },
-  doctor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  // doctor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   doctorName: { type: String, required: true },
   medications: [medicationSchema],  // Array of medications
   diagnosis: { type: String, required: true },  // Diagnosis for the prescription

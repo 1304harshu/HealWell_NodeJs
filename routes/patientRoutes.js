@@ -56,37 +56,37 @@ router.post('/schedule-appointment', authenticateJWT, async (req, res) => {
   });
 
 // Get all medications based on diagnosis
-router.get('/medications-by-diagnosis', authenticateJWT, async (req, res) => {
-    const { diagnosis } = req.query;  // Diagnosis is passed as a query parameter
+// router.get('/medications-by-diagnosis', authenticateJWT, async (req, res) => {
+//     const { diagnosis } = req.query;  // Diagnosis is passed as a query parameter
   
-    if (!diagnosis) {
-      return res.status(400).send({ message: 'Diagnosis is required' });
-    }
+//     if (!diagnosis) {
+//       return res.status(400).send({ message: 'Diagnosis is required' });
+//     }
   
-    try {
-      // Find prescriptions with the given diagnosis
-      const prescriptions = await Prescription.find({ diagnosis: new RegExp(diagnosis, 'i') });  // Case-insensitive search
+//     try {
+//       // Find prescriptions with the given diagnosis
+//       const prescriptions = await Prescription.find({ diagnosis: new RegExp(diagnosis, 'i') });  // Case-insensitive search
   
-      // Create an array to store the list of medications
-      const medications = prescriptions.flatMap(prescription =>
-        prescription.medications.map(med => ({
-          name: med.name,
-          dosage: med.dosage,
-          quantity: med.quantity,
-          instructions: med.instructions,
-          diagnosis: prescription.diagnosis,
-        }))
-      );
+//       // Create an array to store the list of medications
+//       const medications = prescriptions.flatMap(prescription =>
+//         prescription.medications.map(med => ({
+//           name: med.name,
+//           dosage: med.dosage,
+//           quantity: med.quantity,
+//           instructions: med.instructions,
+//           diagnosis: prescription.diagnosis,
+//         }))
+//       );
   
-      if (medications.length === 0) {
-        return res.status(404).send({ message: 'No medications found for the given diagnosis' });
-      }
+//       if (medications.length === 0) {
+//         return res.status(404).send({ message: 'No medications found for the given diagnosis' });
+//       }
   
-      res.status(200).send(medications);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: 'Error fetching medications' });
-    }
-  });
+//       res.status(200).send(medications);
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).send({ message: 'Error fetching medications' });
+//     }
+//   });
 
 module.exports = router;

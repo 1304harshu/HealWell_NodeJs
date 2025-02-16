@@ -2,48 +2,54 @@ const express = require('express');
 const Prescription = require('../models/Prescription');
 const Appointment = require('../models/Appointment');
 const authenticateJWT = require('../middleware/authMiddleware');
+const User = require('../models/User');
+const Medicine = require('../models/Medicines'); // Import Medicine model
 
 const router = express.Router();
 
-// Add a prescription (Admin only)
-// router.post('/add-prescription', authenticateJWT, async (req, res) => {
-//   if (req.user.role !== 'admin') return res.status(403).send({ message: 'Admin access required' });
-
-//   const { patientId, doctorId, medications } = req.body;
-
-//   const prescription = new Prescription({
-//     patient: patientId,
-//     doctor: doctorId,
-//     medications,
-//   });
-
-//   await prescription.save();
-//   res.status(201).send(prescription);
-// });
 router.post('/add-prescription', authenticateJWT, async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).send({ message: 'Admin access required' });
   
-    const { patientId, doctorId, medications, diagnosis, instructions, startDate, endDate, refills, pharmacy, doctorNotes } = req.body;
+    const { patientEmail, doctorName, medications, diagnosis, instructions, startDate, endDate, refills, pharmacy, doctorNotes } = req.body;
+    console.log("Request Body:", req.body.patientEmail); 
+    //  const patient = await User.findOne({ email: patientEmail });
+    //     if (!patient) {
+    //         return res.status(404).json({ message: 'Patient not found' });
+    //     }
+
+    if (!patientEmail) {
+      return res.status(400).json({ message: "Patient email is required" });
+  }
+
+  try {
+      const patient = await User.findOne({ email: patientEmail });
+      if (!patient) {
+          return res.status(404).json({ message: 'Patient not found' });
+      }
+
+      const prescription = new Prescription({
+          prescriptionNumber: `RX${Date.now()}`, // Unique identifier
+          patientName: patient.name, // Fetch from database
+          patientEmail,
+          doctorName,
+          medications,
+          diagnosis,
+          instructions,
+          startDate,
+          endDate,
+          refills,
+          pharmacy,
+          doctorNotes,
+          status: 'active'
+      });
+
+      await prescription.save();
+      res.status(201).send(prescription);
+  } catch (error) {
+      console.error("Error saving prescription:", error);
+      res.status(500).json({ message: "Internal Server Error", error });
+  }
   
-    const prescription = new Prescription({
-      prescriptionNumber: `RX${Date.now()}`,  // Generate a unique prescription number
-      patient: patientId,
-      patientEmail,
-      doctor: doctorId,
-      doctorName,
-      medications,
-      diagnosis,
-      instructions,
-      startDate,
-      endDate,
-      refills,
-      pharmacy,
-      doctorNotes,
-      status: 'active'
-    });
-  
-    await prescription.save();
-    res.status(201).send(prescription);
   });
   
 
@@ -55,4 +61,38 @@ router.get('/appointments', authenticateJWT, async (req, res) => {
   res.send(appointments);
 });
 
+
+// Get all medications based on diagnosis
+router.get('/medications-by-diagnosis', authenticateJWT, async (req, res) => {
+    const { diagnosis } = req.query;  
+
+    if (!diagnosis) {
+        return res.status(400).send({ message: 'Diagnosis is required' });
+    }
+
+    try {
+        // Find medicines related to the given diagnosis
+        const medications = await Medicine.find({ diagnosis: new RegExp(diagnosis, 'i') });
+
+        if (medications.length === 0) {
+            return res.status(404).send({ message: 'No medications found for the given diagnosis' });
+        }
+
+        res.status(200).send(medications);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: 'Error fetching medications' });
+    }
+});
+
+router.post('/add-medicine', async (req, res) => {
+  try {
+      const medicines = req.body; // Expecting an array of medicine objects
+      await Medicine.insertMany(medicines);
+      res.status(201).send({ message: "Medicines added successfully" });
+  } catch (error) {
+      console.error(error);
+      res.status(500).send({ message: "Error adding medicines" });
+  }
+});
 module.exports = router;
