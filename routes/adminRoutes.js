@@ -28,7 +28,9 @@ router.post('/add-prescription', authenticateJWT, async (req, res) => {
     const prescription = new Prescription({
       prescriptionNumber: `RX${Date.now()}`,  // Generate a unique prescription number
       patient: patientId,
+      patientEmail,
       doctor: doctorId,
+      doctorName,
       medications,
       diagnosis,
       instructions,
