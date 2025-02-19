@@ -55,13 +55,36 @@ router.post('/add-prescription', authenticateJWT, async (req, res) => {
   
 
 // View all appointments (Admin only)
+// router.get('/appointments', authenticateJWT, async (req, res) => {
+//   if (req.user.role !== 'admin') return res.status(403).send({ message: 'Admin access required' });
+
+//   const appointments = await Appointment.find().populate('patient doctor');
+//   res.send(appointments);
+// });
+
+
 router.get('/appointments', authenticateJWT, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).send({ message: 'Admin access required' });
-
-  const appointments = await Appointment.find().populate('patient doctor');
-  res.send(appointments);
-});
-
+    if (req.user.role !== 'admin') {
+      return res.status(403).send({ message: 'Admin access required' });
+    }
+  
+    try {
+      const appointments = await Appointment.find()
+        .populate({
+          path: 'patientId', // This should match the field in the Appointment schema
+          select: 'name'   // Fetch only the name from Users table
+        })
+        .populate({
+          path: 'doctorId',   // This should match the field in the Appointment schema
+          select: 'name'    // Fetch only the name from Doctors table
+        });
+  
+      res.send(appointments);
+    } catch (error) {
+      res.status(500).send({ message: 'Internal Server Error', error });
+    }
+  });
+  
 
 // Get all medications based on diagnosis
 router.get('/medications-by-diagnosis', authenticateJWT, async (req, res) => {
