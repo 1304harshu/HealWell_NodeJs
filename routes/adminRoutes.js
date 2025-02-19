@@ -45,7 +45,7 @@ router.post('/add-prescription', authenticateJWT, async (req, res) => {
       });
 
       await prescription.save();
-      res.status(201).send(prescription);
+      res.status(201).send({message:"Prescription submitted successfully!" ,prescriptionData: prescription});
   } catch (error) {
       console.error("Error saving prescription:", error);
       res.status(500).json({ message: "Internal Server Error", error });
